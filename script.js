@@ -10,6 +10,8 @@ const express = require('express'),
   DEFAULT_MODE = 'writeFile',
   path = require('path');
 
+const port = 3000;
+
 // Create the folder path in case it doesn't exist
 shell.mkdir('-p', folderPath);
 
@@ -25,9 +27,15 @@ app.post('/write', (req, res) => {
     uniqueIdentifier = req.body.uniqueIdentifier ? typeof req.body.uniqueIdentifier === 'boolean' ? Date.now() : req.body.uniqueIdentifier : false,
     filename = `${req.body.requestName}${uniqueIdentifier || ''}`,
     filePath = `${path.join(folderPath, filename)}.${extension}`,
+    base64decode = !!req.body.base64decode,
+    fileContent = req.body.fileContent || '' ,
     options = req.body.options || undefined;
 
-  fs[fsMode](filePath, req.body.responseData, options, (err) => {
+  if (base64decode) {
+    fileContent = Buffer.from(fileContent, 'base64');
+  }
+
+  fs[fsMode](filePath, fileContent, options, (err) => {
     if (err) {
       console.log(err);
       res.send('Error');
@@ -38,7 +46,7 @@ app.post('/write', (req, res) => {
   });
 });
 
-app.listen(3000, () => {
-  console.log('ResponsesToFile App is listening now! Send them requests my way!');
+app.listen(port, () => {
+  console.log(`ResponsesToFile App is listening now on port ${port}! Send them requests my way!`);
   console.log(`Data is being stored at location: ${path.join(process.cwd(), folderPath)}`);
 });
